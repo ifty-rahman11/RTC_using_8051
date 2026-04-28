@@ -14,3 +14,6 @@ Hardware Implementation Image:
 <img width="1600" height="1200" alt="image" src="https://github.com/user-attachments/assets/3c240b0b-6923-441a-9673-89879f44ccee" />
 <img width="1600" height="1200" alt="image" src="https://github.com/user-attachments/assets/257f814b-479a-4873-8739-f539faae231c" />
 
+Instructions:
+1. Download the proteus file and .hex file.
+2. Upload .hex file in the 8051 microcontroller in proteus schematic.
