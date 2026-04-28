@@ -1,0 +1,1657 @@
+
+ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 1
+
+
+
+
+
+       MCS-51 Family Macro Assembler   A S E M - 5 1   V 1.3
+       =====================================================
+
+
+
+	Source File:	E:\Study Materials\Seventh Semester\Course Materials\2. Labs\EEE 4706\4706 final\PROJECT_FINAL.asm
+	Object File:	E:\Study Materials\Seventh Semester\Course Materials\2. Labs\EEE 4706\4706 final\PROJECT_FINAL.hex
+	List File:	E:\Study Materials\Seventh Semester\Course Materials\2. Labs\EEE 4706\4706 final\PROJECT_FINAL.lst
+
+
+
+ Line  I  Addr  Code            Source
+
+    1:		N      0000	ORG     0000H
+    2:	  0000	02 00 03	                LJMP    START
+    3:		B	 B0	LCD_RS          BIT     P3.0
+    4:		B	 B1	LCD_RW          BIT     P3.1
+    5:		B	 B2	LCD_EN          BIT     P3.2
+    6:		B	 B4	PWR_KEY         BIT     P3.4
+    7:		B	 B5	DHT_DATA        BIT     P3.5
+    8:		B	 B6	I2C_SCL         BIT     P3.6
+    9:		B	 B7	I2C_SDA         BIT     P3.7
+   10:		N      0030	KEYVAL          EQU     30H
+   11:		N      0031	RTC_SEC         EQU     31H
+   12:		N      0032	RTC_MIN         EQU     32H
+   13:		N      0033	RTC_HR          EQU     33H
+   14:		N      0034	RTC_DAY         EQU     34H
+   15:		N      0035	RTC_DATE        EQU     35H
+   16:		N      0036	RTC_MONTH       EQU     36H
+   17:		N      0037	RTC_YEAR        EQU     37H
+   18:		N      0038	SET_IDX         EQU     38H
+   19:		N      0039	CURSORADR       EQU     39H
+   20:		N      003A	IN_HH_T         EQU     3AH
+   21:		N      003B	IN_HH_U         EQU     3BH
+   22:		N      003C	IN_MM_T         EQU     3CH
+   23:		N      003D	IN_MM_U         EQU     3DH
+   24:		N      003E	IN_SS_T         EQU     3EH
+   25:		N      003F	IN_SS_U         EQU     3FH
+   26:		N      0040	IN_DD_T         EQU     40H
+   27:		N      0041	IN_DD_U         EQU     41H
+   28:		N      0042	IN_MO_T         EQU     42H
+   29:		N      0043	IN_MO_U         EQU     43H
+   30:		N      0044	DAYIDX          EQU     44H
+   31:		N      0045	TMP             EQU     45H
+   32:		N      0046	TMP2            EQU     46H
+   33:		N      0047	TMP3            EQU     47H
+   34:		N      0048	LOOPCNT         EQU     48H
+   35:		N      0049	DHT_HUM_INT     EQU     49H
+   36:		N      004A	DHT_HUM_DEC     EQU     4AH
+   37:		N      004B	DHT_TMP_INT     EQU     4BH
+   38:		N      004C	DHT_TMP_DEC     EQU     4CH
+   39:		N      004D	DHT_CHECK       EQU     4DH
+   40:		N      004E	DHT_LASTTEMP    EQU     4EH
+   41:		N      004F	MODE_FLAG       EQU     4FH
+   42:		N      00D0	RTC_WADDR       EQU     0D0H
+   43:		N      00D1	RTC_RADDR       EQU     0D1H
+
+ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 2
+
+
+
+ Line  I  Addr  Code            Source
+
+   44:
+   45:				;======================================================================
+   46:	  0003			START:
+   47:	  0003	75 81 70	                MOV     SP, #70H
+   48:	  0006	75 90 00	                MOV     P1, #00H
+   49:	  0009	75 A0 FF	                MOV     P2, #0FFH
+   50:	  000C	C2 B0		                CLR     LCD_RS
+   51:	  000E	C2 B1		                CLR     LCD_RW
+   52:	  0010	C2 B2		                CLR     LCD_EN
+   53:	  0012	D2 B6		                SETB    I2C_SCL
+   54:	  0014	D2 B7		                SETB    I2C_SDA
+   55:	  0016	D2 B5		                SETB    DHT_DATA
+   56:	  0018	75 4E 00	                MOV     DHT_LASTTEMP, #00H
+   57:	  001B	75 48 00	                MOV     LOOPCNT, #00H
+   58:	  001E	75 4F 00	                MOV     MODE_FLAG, #00H
+   59:	  0021	12 08 52	                LCALL   DELAY_50MS
+   60:	  0024	12 08 52	                LCALL   DELAY_50MS
+   61:	  0027	12 08 52	                LCALL   DELAY_50MS
+   62:	  002A	12 06 1B	                LCALL   I2C_RECOVER
+   63:	  002D	12 05 39	                LCALL   LCD_INIT
+   64:	  0030	74 01		                MOV     A, #01H
+   65:	  0032	12 05 93	                LCALL   LCD_CMD
+   66:	  0035	12 08 42	                LCALL   DELAY_5MS
+   67:	  0038	74 83		                MOV     A, #083H
+   68:	  003A	12 05 93	                LCALL   LCD_CMD
+   69:	  003D	90 08 6E	                MOV     DPTR, #MSG_INIT
+   70:	  0040	12 05 B5	                LCALL   LCD_PRINT
+   71:	  0043	12 08 5A	                LCALL   DELAY_2SEC
+   72:	  0046	12 00 F8	                LCALL   SETMODE_INIT
+   73:
+   74:				;======================================================================
+   75:	  0049			SETMODE_LOOP:
+   76:	  0049	12 00 D2	                LCALL   CHECK_POWER_SAVE
+   77:	  004C	12 06 D6	                LCALL   KEYPAD_GETKEY
+   78:	  004F	E5 30		                MOV     A, KEYVAL
+   79:	  0051	60 F6		                JZ      SETMODE_LOOP
+   80:	  0053	B4 43 06	                CJNE    A, #'C', SM_CHECK_PLUS
+   81:	  0056	12 00 F8	                LCALL   SETMODE_INIT
+   82:	  0059	02 00 49	                LJMP    SETMODE_LOOP
+   83:	  005C			SM_CHECK_PLUS:
+   84:	  005C	B4 2B 06	                CJNE    A, #'+', SM_CHECK_EQUAL
+   85:	  005F	12 02 3A	                LCALL   NEXT_DAY
+   86:	  0062	02 00 49	                LJMP    SETMODE_LOOP
+   87:	  0065			SM_CHECK_EQUAL:
+   88:	  0065	B4 3D 2D	                CJNE    A, #'=', SM_CHECK_DIGIT
+   89:	  0068	12 02 91	                LCALL   VALIDATE_AND_SAVE
+   90:	  006B	40 25		                JC      SM_INVALID
+   91:	  006D	74 01		                MOV     A, #01H
+   92:	  006F	12 05 93	                LCALL   LCD_CMD
+   93:	  0072	12 08 42	                LCALL   DELAY_5MS
+   94:	  0075	74 85		                MOV     A, #085H
+   95:	  0077	12 05 93	                LCALL   LCD_CMD
+   96:	  007A	90 08 79	                MOV     DPTR, #MSG_SAVED
+   97:	  007D	12 05 B5	                LCALL   LCD_PRINT
+   98:	  0080	12 03 3C	                LCALL   WRITE_INPUTS_TO_RTC
+   99:	  0083	12 08 5A	                LCALL   DELAY_2SEC
+
+ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 3
+
+
+
+ Line  I  Addr  Code            Source
+
+  100:	  0086	75 4F 01	                MOV     MODE_FLAG, #01H
+  101:	  0089	75 48 00	                MOV     LOOPCNT, #00H
+  102:	  008C	12 04 BB	                LCALL   DHT11_READ
+  103:	  008F	02 00 A3	                LJMP    RUNMODE_LOOP
+  104:	  0092			SM_INVALID:
+  105:	  0092	02 00 49	                LJMP    SETMODE_LOOP
+  106:	  0095			SM_CHECK_DIGIT:
+  107:	  0095	12 08 22	                LCALL   IS_NUMERIC_KEY
+  108:	  0098	50 03		                JNC     SM_STORE
+  109:	  009A	02 00 49	                LJMP    SETMODE_LOOP
+  110:	  009D			SM_STORE:
+  111:	  009D	12 01 89	                LCALL   STORE_DIGIT
+  112:	  00A0	02 00 49	                LJMP    SETMODE_LOOP
+  113:
+  114:				;======================================================================
+  115:	  00A3			RUNMODE_LOOP:
+  116:	  00A3	12 00 D2	                LCALL   CHECK_POWER_SAVE
+  117:	  00A6	12 03 FC	                LCALL   RTC_READ_ALL
+  118:	  00A9	05 48		                INC     LOOPCNT
+  119:	  00AB	E5 48		                MOV     A, LOOPCNT
+  120:	  00AD	B4 28 06	                CJNE    A, #40, RM_SKIP_DHT
+  121:	  00B0	75 48 00	                MOV     LOOPCNT, #00H
+  122:	  00B3	12 04 BB	                LCALL   DHT11_READ
+  123:	  00B6			RM_SKIP_DHT:
+  124:	  00B6	12 04 38	                LCALL   DISPLAY_RTC_AND_TEMP
+  125:	  00B9	12 06 D6	                LCALL   KEYPAD_GETKEY
+  126:	  00BC	E5 30		                MOV     A, KEYVAL
+  127:	  00BE	60 0C		                JZ      RUNMODE_DELAY
+  128:	  00C0	B4 43 09	                CJNE    A, #'C', RUNMODE_DELAY
+  129:	  00C3	75 4F 00	                MOV     MODE_FLAG, #00H
+  130:	  00C6	12 00 F8	                LCALL   SETMODE_INIT
+  131:	  00C9	02 00 49	                LJMP    SETMODE_LOOP
+  132:	  00CC			RUNMODE_DELAY:
+  133:	  00CC	12 08 52	                LCALL   DELAY_50MS
+  134:	  00CF	02 00 A3	                LJMP    RUNMODE_LOOP
+  135:
+  136:				;======================================================================
+  137:	  00D2			CHECK_POWER_SAVE:
+  138:	  00D2	20 B4 01	                JB      PWR_KEY, ENTER_POWER_SAVE
+  139:	  00D5	22		                RET
+  140:	  00D6			ENTER_POWER_SAVE:
+  141:	  00D6	74 08		                MOV     A, #08H
+  142:	  00D8	12 05 93	                LCALL   LCD_CMD
+  143:	  00DB			PS_WAIT_LOW:
+  144:	  00DB	20 B4 FD	                JB      PWR_KEY, PS_WAIT_LOW
+  145:	  00DE	74 0C		                MOV     A, #0CH
+  146:	  00E0	12 05 93	                LCALL   LCD_CMD
+  147:	  00E3	12 08 42	                LCALL   DELAY_5MS
+  148:	  00E6	E5 4F		                MOV     A, MODE_FLAG
+  149:	  00E8	70 04		                JNZ     PS_RUN_REFRESH
+  150:	  00EA	12 01 1F	                LCALL   SETMODE_REDRAW
+  151:	  00ED	22		                RET
+  152:	  00EE			PS_RUN_REFRESH:
+  153:	  00EE	12 03 FC	                LCALL   RTC_READ_ALL
+  154:	  00F1	12 04 BB	                LCALL   DHT11_READ
+  155:	  00F4	12 04 38	                LCALL   DISPLAY_RTC_AND_TEMP
+
+ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 4
+
+
+
+ Line  I  Addr  Code            Source
+
+  156:	  00F7	22		                RET
+  157:
+  158:				;======================================================================
+  159:	  00F8			SETMODE_INIT:
+  160:	  00F8	75 4F 00	                MOV     MODE_FLAG, #00H
+  161:	  00FB	75 38 00	                MOV     SET_IDX, #00H
+  162:	  00FE	75 44 00	                MOV     DAYIDX, #00H
+  163:	  0101	75 3A 30	                MOV     IN_HH_T, #'0'
+  164:	  0104	75 3B 30	                MOV     IN_HH_U, #'0'
+  165:	  0107	75 3C 30	                MOV     IN_MM_T, #'0'
+  166:	  010A	75 3D 30	                MOV     IN_MM_U, #'0'
+  167:	  010D	75 3E 30	                MOV     IN_SS_T, #'0'
+  168:	  0110	75 3F 30	                MOV     IN_SS_U, #'0'
+  169:	  0113	75 40 30	                MOV     IN_DD_T, #'0'
+  170:	  0116	75 41 31	                MOV     IN_DD_U, #'1'
+  171:	  0119	75 42 30	                MOV     IN_MO_T, #'0'
+  172:	  011C	75 43 31	                MOV     IN_MO_U, #'1'
+  173:	  011F			SETMODE_REDRAW:
+  174:	  011F	74 01		                MOV     A, #01H
+  175:	  0121	12 05 93	                LCALL   LCD_CMD
+  176:	  0124	12 08 42	                LCALL   DELAY_5MS
+  177:	  0127	74 84		                MOV     A, #084H
+  178:	  0129	12 05 93	                LCALL   LCD_CMD
+  179:	  012C	E5 3A		                MOV     A, IN_HH_T
+  180:	  012E	12 05 A4	                LCALL   LCD_DATA
+  181:	  0131	E5 3B		                MOV     A, IN_HH_U
+  182:	  0133	12 05 A4	                LCALL   LCD_DATA
+  183:	  0136	74 3A		                MOV     A, #':'
+  184:	  0138	12 05 A4	                LCALL   LCD_DATA
+  185:	  013B	E5 3C		                MOV     A, IN_MM_T
+  186:	  013D	12 05 A4	                LCALL   LCD_DATA
+  187:	  0140	E5 3D		                MOV     A, IN_MM_U
+  188:	  0142	12 05 A4	                LCALL   LCD_DATA
+  189:	  0145	74 3A		                MOV     A, #':'
+  190:	  0147	12 05 A4	                LCALL   LCD_DATA
+  191:	  014A	E5 3E		                MOV     A, IN_SS_T
+  192:	  014C	12 05 A4	                LCALL   LCD_DATA
+  193:	  014F	E5 3F		                MOV     A, IN_SS_U
+  194:	  0151	12 05 A4	                LCALL   LCD_DATA
+  195:	  0154	74 C0		                MOV     A, #0C0H
+  196:	  0156	12 05 93	                LCALL   LCD_CMD
+  197:	  0159	E5 40		                MOV     A, IN_DD_T
+  198:	  015B	12 05 A4	                LCALL   LCD_DATA
+  199:	  015E	E5 41		                MOV     A, IN_DD_U
+  200:	  0160	12 05 A4	                LCALL   LCD_DATA
+  201:	  0163	74 3A		                MOV     A, #':'
+  202:	  0165	12 05 A4	                LCALL   LCD_DATA
+  203:	  0168	E5 42		                MOV     A, IN_MO_T
+  204:	  016A	12 05 A4	                LCALL   LCD_DATA
+  205:	  016D	E5 43		                MOV     A, IN_MO_U
+  206:	  016F	12 05 A4	                LCALL   LCD_DATA
+  207:	  0172	12 02 4D	                LCALL   SHOW_DAY_FROM_IDX
+  208:	  0175	74 CC		                MOV     A, #0CCH
+  209:	  0177	12 05 93	                LCALL   LCD_CMD
+  210:	  017A	90 08 8E	                MOV     DPTR, #MSG_TEMP_DASH
+  211:	  017D	12 05 B5	                LCALL   LCD_PRINT
+
+ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 5
+
+
+
+ Line  I  Addr  Code            Source
+
+  212:	  0180	75 39 84	                MOV     CURSORADR, #084H
+  213:	  0183	E5 39		                MOV     A, CURSORADR
+  214:	  0185	12 05 93	                LCALL   LCD_CMD
+  215:	  0188	22		                RET
+  216:
+  217:				;----------------------------------------------------------------------
+  218:	  0189			STORE_DIGIT:
+  219:	  0189	E5 38		                MOV     A, SET_IDX
+  220:	  018B	B4 0A 01	                CJNE    A, #0AH, SD_GO
+  221:	  018E	22		                RET
+  222:	  018F			SD_GO:
+  223:	  018F	E5 39		                MOV     A, CURSORADR
+  224:	  0191	12 05 93	                LCALL   LCD_CMD
+  225:	  0194	E5 30		                MOV     A, KEYVAL
+  226:	  0196	12 05 A4	                LCALL   LCD_DATA
+  227:	  0199	E5 38		                MOV     A, SET_IDX
+  228:	  019B	B4 00 06	                CJNE    A, #00H, SD_1
+  229:	  019E	85 30 3A	                MOV     IN_HH_T, KEYVAL
+  230:	  01A1	02 01 EF	                LJMP    SD_NEXT
+  231:	  01A4	B4 01 06	SD_1:           CJNE    A, #01H, SD_2
+  232:	  01A7	85 30 3B	                MOV     IN_HH_U, KEYVAL
+  233:	  01AA	02 01 EF	                LJMP    SD_NEXT
+  234:	  01AD	B4 02 06	SD_2:           CJNE    A, #02H, SD_3
+  235:	  01B0	85 30 3C	                MOV     IN_MM_T, KEYVAL
+  236:	  01B3	02 01 EF	                LJMP    SD_NEXT
+  237:	  01B6	B4 03 06	SD_3:           CJNE    A, #03H, SD_4
+  238:	  01B9	85 30 3D	                MOV     IN_MM_U, KEYVAL
+  239:	  01BC	02 01 EF	                LJMP    SD_NEXT
+  240:	  01BF	B4 04 06	SD_4:           CJNE    A, #04H, SD_5
+  241:	  01C2	85 30 3E	                MOV     IN_SS_T, KEYVAL
+  242:	  01C5	02 01 EF	                LJMP    SD_NEXT
+  243:	  01C8	B4 05 06	SD_5:           CJNE    A, #05H, SD_6
+  244:	  01CB	85 30 3F	                MOV     IN_SS_U, KEYVAL
+  245:	  01CE	02 01 EF	                LJMP    SD_NEXT
+  246:	  01D1	B4 06 06	SD_6:           CJNE    A, #06H, SD_7
+  247:	  01D4	85 30 40	                MOV     IN_DD_T, KEYVAL
+  248:	  01D7	02 01 EF	                LJMP    SD_NEXT
+  249:	  01DA	B4 07 06	SD_7:           CJNE    A, #07H, SD_8
+  250:	  01DD	85 30 41	                MOV     IN_DD_U, KEYVAL
+  251:	  01E0	02 01 EF	                LJMP    SD_NEXT
+  252:	  01E3	B4 08 06	SD_8:           CJNE    A, #08H, SD_9
+  253:	  01E6	85 30 42	                MOV     IN_MO_T, KEYVAL
+  254:	  01E9	02 01 EF	                LJMP    SD_NEXT
+  255:	  01EC	85 30 43	SD_9:           MOV     IN_MO_U, KEYVAL
+  256:	  01EF			SD_NEXT:
+  257:	  01EF	05 38		                INC     SET_IDX
+  258:	  01F1	12 01 F5	                LCALL   ADVANCE_INPUT_CURSOR
+  259:	  01F4	22		                RET
+  260:
+  261:				;----------------------------------------------------------------------
+  262:	  01F5			ADVANCE_INPUT_CURSOR:
+  263:	  01F5	E5 38		                MOV     A, SET_IDX
+  264:	  01F7	B4 01 04	                CJNE    A, #01H, AIC_1
+  265:	  01FA	75 39 85	                MOV     CURSORADR, #085H
+  266:	  01FD	22		                RET
+  267:	  01FE	B4 02 04	AIC_1:          CJNE    A, #02H, AIC_2
+
+ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 6
+
+
+
+ Line  I  Addr  Code            Source
+
+  268:	  0201	75 39 87	                MOV     CURSORADR, #087H
+  269:	  0204	22		                RET
+  270:	  0205	B4 03 04	AIC_2:          CJNE    A, #03H, AIC_3
+  271:	  0208	75 39 88	                MOV     CURSORADR, #088H
+  272:	  020B	22		                RET
+  273:	  020C	B4 04 04	AIC_3:          CJNE    A, #04H, AIC_4
+  274:	  020F	75 39 8A	                MOV     CURSORADR, #08AH
+  275:	  0212	22		                RET
+  276:	  0213	B4 05 04	AIC_4:          CJNE    A, #05H, AIC_5
+  277:	  0216	75 39 8B	                MOV     CURSORADR, #08BH
+  278:	  0219	22		                RET
+  279:	  021A	B4 06 04	AIC_5:          CJNE    A, #06H, AIC_6
+  280:	  021D	75 39 C0	                MOV     CURSORADR, #0C0H
+  281:	  0220	22		                RET
+  282:	  0221	B4 07 04	AIC_6:          CJNE    A, #07H, AIC_7
+  283:	  0224	75 39 C1	                MOV     CURSORADR, #0C1H
+  284:	  0227	22		                RET
+  285:	  0228	B4 08 04	AIC_7:          CJNE    A, #08H, AIC_8
+  286:	  022B	75 39 C3	                MOV     CURSORADR, #0C3H
+  287:	  022E	22		                RET
+  288:	  022F	B4 09 04	AIC_8:          CJNE    A, #09H, AIC_9
+  289:	  0232	75 39 C4	                MOV     CURSORADR, #0C4H
+  290:	  0235	22		                RET
+  291:	  0236	75 39 C4	AIC_9:          MOV     CURSORADR, #0C4H
+  292:	  0239	22		                RET
+  293:
+  294:				;----------------------------------------------------------------------
+  295:	  023A			NEXT_DAY:
+  296:	  023A	05 44		                INC     DAYIDX
+  297:	  023C	E5 44		                MOV     A, DAYIDX
+  298:	  023E	B4 07 03	                CJNE    A, #07H, ND_OK
+  299:	  0241	75 44 00	                MOV     DAYIDX, #00H
+  300:	  0244			ND_OK:
+  301:	  0244	12 02 4D	                LCALL   SHOW_DAY_FROM_IDX
+  302:	  0247	E5 39		                MOV     A, CURSORADR
+  303:	  0249	12 05 93	                LCALL   LCD_CMD
+  304:	  024C	22		                RET
+  305:
+  306:				;----------------------------------------------------------------------
+  307:	  024D			SHOW_DAY_FROM_IDX:
+  308:	  024D	74 C7		                MOV     A, #0C7H
+  309:	  024F	12 05 93	                LCALL   LCD_CMD
+  310:	  0252	E5 44		                MOV     A, DAYIDX
+  311:	  0254	B4 00 06	                CJNE    A, #00H, SDI_1
+  312:	  0257	90 08 AB	                MOV     DPTR, #MSG_SAT
+  313:	  025A	02 02 8D	                LJMP    SDI_PRINT
+  314:	  025D	B4 01 06	SDI_1:          CJNE    A, #01H, SDI_2
+  315:	  0260	90 08 93	                MOV     DPTR, #MSG_SUN
+  316:	  0263	02 02 8D	                LJMP    SDI_PRINT
+  317:	  0266	B4 02 06	SDI_2:          CJNE    A, #02H, SDI_3
+  318:	  0269	90 08 97	                MOV     DPTR, #MSG_MON
+  319:	  026C	02 02 8D	                LJMP    SDI_PRINT
+  320:	  026F	B4 03 06	SDI_3:          CJNE    A, #03H, SDI_4
+  321:	  0272	90 08 9B	                MOV     DPTR, #MSG_TUE
+  322:	  0275	02 02 8D	                LJMP    SDI_PRINT
+  323:	  0278	B4 04 06	SDI_4:          CJNE    A, #04H, SDI_5
+
+ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 7
+
+
+
+ Line  I  Addr  Code            Source
+
+  324:	  027B	90 08 9F	                MOV     DPTR, #MSG_WED
+  325:	  027E	02 02 8D	                LJMP    SDI_PRINT
+  326:	  0281	B4 05 06	SDI_5:          CJNE    A, #05H, SDI_6
+  327:	  0284	90 08 A3	                MOV     DPTR, #MSG_THU
+  328:	  0287	02 02 8D	                LJMP    SDI_PRINT
+  329:	  028A	90 08 A7	SDI_6:          MOV     DPTR, #MSG_FRI
+  330:	  028D	12 05 B5	SDI_PRINT:      LCALL   LCD_PRINT
+  331:	  0290	22		                RET
+  332:
+  333:				;======================================================================
+  334:	  0291			VALIDATE_AND_SAVE:
+  335:	  0291	E5 38		                MOV     A, SET_IDX
+  336:	  0293	B4 0A 02	                CJNE    A, #0AH, VAS_FAIL1
+  337:	  0296	80 03		                SJMP    VAS_HOUR
+  338:	  0298	02 03 3A	VAS_FAIL1:      LJMP    VAS_FAIL
+  339:	  029B			VAS_HOUR:
+  340:	  029B	E5 3A		                MOV     A, IN_HH_T
+  341:	  029D	C3		                CLR     C
+  342:	  029E	94 30		                SUBB    A, #'0'
+  343:	  02A0	F5 45		                MOV     TMP, A
+  344:	  02A2	E5 3B		                MOV     A, IN_HH_U
+  345:	  02A4	C3		                CLR     C
+  346:	  02A5	94 30		                SUBB    A, #'0'
+  347:	  02A7	F5 46		                MOV     TMP2, A
+  348:	  02A9	E5 45		                MOV     A, TMP
+  349:	  02AB	B4 00 03	                CJNE    A, #00H, VAS_H1
+  350:	  02AE	02 02 C7	                LJMP    VAS_MINUTE
+  351:	  02B1	B4 01 03	VAS_H1:         CJNE    A, #01H, VAS_H2
+  352:	  02B4	02 02 C7	                LJMP    VAS_MINUTE
+  353:	  02B7	B4 02 0A	VAS_H2:         CJNE    A, #02H, VAS_FAIL2
+  354:	  02BA	E5 46		                MOV     A, TMP2
+  355:	  02BC	C3		                CLR     C
+  356:	  02BD	94 04		                SUBB    A, #04H
+  357:	  02BF	50 03		                JNC     VAS_FAIL2
+  358:	  02C1	02 02 C7	                LJMP    VAS_MINUTE
+  359:	  02C4	02 03 3A	VAS_FAIL2:      LJMP    VAS_FAIL
+  360:	  02C7			VAS_MINUTE:
+  361:	  02C7	E5 3C		                MOV     A, IN_MM_T
+  362:	  02C9	C3		                CLR     C
+  363:	  02CA	94 30		                SUBB    A, #'0'
+  364:	  02CC	C3		                CLR     C
+  365:	  02CD	94 06		                SUBB    A, #06H
+  366:	  02CF	50 02		                JNC     VAS_FAIL3
+  367:	  02D1	80 03		                SJMP    VAS_SECOND
+  368:	  02D3	02 03 3A	VAS_FAIL3:      LJMP    VAS_FAIL
+  369:	  02D6			VAS_SECOND:
+  370:	  02D6	E5 3E		                MOV     A, IN_SS_T
+  371:	  02D8	C3		                CLR     C
+  372:	  02D9	94 30		                SUBB    A, #'0'
+  373:	  02DB	C3		                CLR     C
+  374:	  02DC	94 06		                SUBB    A, #06H
+  375:	  02DE	50 02		                JNC     VAS_FAIL4
+  376:	  02E0	80 03		                SJMP    VAS_DAY
+  377:	  02E2	02 03 3A	VAS_FAIL4:      LJMP    VAS_FAIL
+  378:	  02E5			VAS_DAY:
+  379:	  02E5	E5 40		                MOV     A, IN_DD_T
+
+ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 8
+
+
+
+ Line  I  Addr  Code            Source
+
+  380:	  02E7	C3		                CLR     C
+  381:	  02E8	94 30		                SUBB    A, #'0'
+  382:	  02EA	F5 45		                MOV     TMP, A
+  383:	  02EC	E5 41		                MOV     A, IN_DD_U
+  384:	  02EE	C3		                CLR     C
+  385:	  02EF	94 30		                SUBB    A, #'0'
+  386:	  02F1	F5 46		                MOV     TMP2, A
+  387:	  02F3	E5 45		                MOV     A, TMP
+  388:	  02F5	45 46		                ORL     A, TMP2
+  389:	  02F7	60 0E		                JZ      VAS_FAIL5
+  390:	  02F9	E5 45		                MOV     A, TMP
+  391:	  02FB	B4 03 0C	                CJNE    A, #03H, VAS_D_CHK
+  392:	  02FE	E5 46		                MOV     A, TMP2
+  393:	  0300	C3		                CLR     C
+  394:	  0301	94 02		                SUBB    A, #02H
+  395:	  0303	50 02		                JNC     VAS_FAIL5
+  396:	  0305	80 0F		                SJMP    VAS_MONTH
+  397:	  0307	02 03 3A	VAS_FAIL5:      LJMP    VAS_FAIL
+  398:	  030A			VAS_D_CHK:
+  399:	  030A	E5 45		                MOV     A, TMP
+  400:	  030C	C3		                CLR     C
+  401:	  030D	94 04		                SUBB    A, #04H
+  402:	  030F	50 02		                JNC     VAS_FAIL6
+  403:	  0311	80 03		                SJMP    VAS_MONTH
+  404:	  0313	02 03 3A	VAS_FAIL6:      LJMP    VAS_FAIL
+  405:	  0316			VAS_MONTH:
+  406:	  0316	E5 42		                MOV     A, IN_MO_T
+  407:	  0318	C3		                CLR     C
+  408:	  0319	94 30		                SUBB    A, #'0'
+  409:	  031B	F5 45		                MOV     TMP, A
+  410:	  031D	E5 43		                MOV     A, IN_MO_U
+  411:	  031F	C3		                CLR     C
+  412:	  0320	94 30		                SUBB    A, #'0'
+  413:	  0322	F5 46		                MOV     TMP2, A
+  414:	  0324	E5 45		                MOV     A, TMP
+  415:	  0326	45 46		                ORL     A, TMP2
+  416:	  0328	60 10		                JZ      VAS_FAIL7
+  417:	  032A	E5 45		                MOV     A, TMP
+  418:	  032C	60 0A		                JZ      VAS_SAVE
+  419:	  032E	B4 01 09	                CJNE    A, #01H, VAS_FAIL7
+  420:	  0331	E5 46		                MOV     A, TMP2
+  421:	  0333	C3		                CLR     C
+  422:	  0334	94 03		                SUBB    A, #03H
+  423:	  0336	50 02		                JNC     VAS_FAIL7
+  424:	  0338	C3		VAS_SAVE:       CLR     C
+  425:	  0339	22		                RET
+  426:	  033A			VAS_FAIL7:
+  427:	  033A	D3		VAS_FAIL:       SETB    C
+  428:	  033B	22		                RET
+  429:
+  430:				;======================================================================
+  431:	  033C			WRITE_INPUTS_TO_RTC:
+  432:	  033C	78 0E		                MOV     R0, #0EH
+  433:	  033E	74 00		                MOV     A, #00H
+  434:	  0340	12 04 A4	                LCALL   RTC_WRITE_REG
+  435:	  0343	12 08 42	                LCALL   DELAY_5MS
+
+ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 9
+
+
+
+ Line  I  Addr  Code            Source
+
+  436:	  0346	78 0F		                MOV     R0, #0FH
+  437:	  0348	74 00		                MOV     A, #00H
+  438:	  034A	12 04 A4	                LCALL   RTC_WRITE_REG
+  439:	  034D	12 08 42	                LCALL   DELAY_5MS
+  440:	  0350	12 06 3B	                LCALL   I2C_START
+  441:	  0353	74 D0		                MOV     A, #RTC_WADDR
+  442:	  0355	12 06 6C	                LCALL   I2C_WRITE_BYTE
+  443:	  0358	74 00		                MOV     A, #00H
+  444:	  035A	12 06 6C	                LCALL   I2C_WRITE_BYTE
+  445:	  035D	E5 3E		                MOV     A, IN_SS_T
+  446:	  035F	C3		                CLR     C
+  447:	  0360	94 30		                SUBB    A, #'0'
+  448:	  0362	C4		                SWAP    A
+  449:	  0363	54 70		                ANL     A, #70H
+  450:	  0365	F5 45		                MOV     TMP, A
+  451:	  0367	E5 3F		                MOV     A, IN_SS_U
+  452:	  0369	C3		                CLR     C
+  453:	  036A	94 30		                SUBB    A, #'0'
+  454:	  036C	45 45		                ORL     A, TMP
+  455:	  036E	12 06 6C	                LCALL   I2C_WRITE_BYTE
+  456:	  0371	E5 3C		                MOV     A, IN_MM_T
+  457:	  0373	C3		                CLR     C
+  458:	  0374	94 30		                SUBB    A, #'0'
+  459:	  0376	C4		                SWAP    A
+  460:	  0377	54 70		                ANL     A, #70H
+  461:	  0379	F5 45		                MOV     TMP, A
+  462:	  037B	E5 3D		                MOV     A, IN_MM_U
+  463:	  037D	C3		                CLR     C
+  464:	  037E	94 30		                SUBB    A, #'0'
+  465:	  0380	45 45		                ORL     A, TMP
+  466:	  0382	12 06 6C	                LCALL   I2C_WRITE_BYTE
+  467:	  0385	E5 3A		                MOV     A, IN_HH_T
+  468:	  0387	C3		                CLR     C
+  469:	  0388	94 30		                SUBB    A, #'0'
+  470:	  038A	C4		                SWAP    A
+  471:	  038B	54 30		                ANL     A, #30H
+  472:	  038D	F5 45		                MOV     TMP, A
+  473:	  038F	E5 3B		                MOV     A, IN_HH_U
+  474:	  0391	C3		                CLR     C
+  475:	  0392	94 30		                SUBB    A, #'0'
+  476:	  0394	45 45		                ORL     A, TMP
+  477:	  0396	12 06 6C	                LCALL   I2C_WRITE_BYTE
+  478:	  0399	E5 44		                MOV     A, DAYIDX
+  479:	  039B	12 03 D5	                LCALL   DAYIDX_TO_RTC
+  480:	  039E	12 06 6C	                LCALL   I2C_WRITE_BYTE
+  481:	  03A1	E5 40		                MOV     A, IN_DD_T
+  482:	  03A3	C3		                CLR     C
+  483:	  03A4	94 30		                SUBB    A, #'0'
+  484:	  03A6	C4		                SWAP    A
+  485:	  03A7	54 30		                ANL     A, #30H
+  486:	  03A9	F5 45		                MOV     TMP, A
+  487:	  03AB	E5 41		                MOV     A, IN_DD_U
+  488:	  03AD	C3		                CLR     C
+  489:	  03AE	94 30		                SUBB    A, #'0'
+  490:	  03B0	45 45		                ORL     A, TMP
+  491:	  03B2	12 06 6C	                LCALL   I2C_WRITE_BYTE
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 10
+
+
+
+ Line  I  Addr  Code            Source
+
+  492:	  03B5	E5 42		                MOV     A, IN_MO_T
+  493:	  03B7	C3		                CLR     C
+  494:	  03B8	94 30		                SUBB    A, #'0'
+  495:	  03BA	C4		                SWAP    A
+  496:	  03BB	54 10		                ANL     A, #10H
+  497:	  03BD	F5 45		                MOV     TMP, A
+  498:	  03BF	E5 43		                MOV     A, IN_MO_U
+  499:	  03C1	C3		                CLR     C
+  500:	  03C2	94 30		                SUBB    A, #'0'
+  501:	  03C4	45 45		                ORL     A, TMP
+  502:	  03C6	12 06 6C	                LCALL   I2C_WRITE_BYTE
+  503:	  03C9	74 25		                MOV     A, #25H
+  504:	  03CB	12 06 6C	                LCALL   I2C_WRITE_BYTE
+  505:	  03CE	12 06 56	                LCALL   I2C_STOP
+  506:	  03D1	12 08 4A	                LCALL   DELAY_20MS
+  507:	  03D4	22		                RET
+  508:
+  509:				;----------------------------------------------------------------------
+  510:	  03D5			DAYIDX_TO_RTC:
+  511:	  03D5	B4 00 03	                CJNE    A, #00H, DITR_1
+  512:	  03D8	74 07		                MOV     A, #07H
+  513:	  03DA	22		                RET
+  514:	  03DB	B4 01 03	DITR_1:         CJNE    A, #01H, DITR_2
+  515:	  03DE	74 01		                MOV     A, #01H
+  516:	  03E0	22		                RET
+  517:	  03E1	B4 02 03	DITR_2:         CJNE    A, #02H, DITR_3
+  518:	  03E4	74 02		                MOV     A, #02H
+  519:	  03E6	22		                RET
+  520:	  03E7	B4 03 03	DITR_3:         CJNE    A, #03H, DITR_4
+  521:	  03EA	74 03		                MOV     A, #03H
+  522:	  03EC	22		                RET
+  523:	  03ED	B4 04 03	DITR_4:         CJNE    A, #04H, DITR_5
+  524:	  03F0	74 04		                MOV     A, #04H
+  525:	  03F2	22		                RET
+  526:	  03F3	B4 05 03	DITR_5:         CJNE    A, #05H, DITR_6
+  527:	  03F6	74 05		                MOV     A, #05H
+  528:	  03F8	22		                RET
+  529:	  03F9	74 06		DITR_6:         MOV     A, #06H
+  530:	  03FB	22		                RET
+  531:
+  532:				;======================================================================
+  533:	  03FC			RTC_READ_ALL:
+  534:	  03FC	12 06 3B	                LCALL   I2C_START
+  535:	  03FF	74 D0		                MOV     A, #RTC_WADDR
+  536:	  0401	12 06 6C	                LCALL   I2C_WRITE_BYTE
+  537:	  0404	74 00		                MOV     A, #00H
+  538:	  0406	12 06 6C	                LCALL   I2C_WRITE_BYTE
+  539:	  0409	12 06 3B	                LCALL   I2C_START
+  540:	  040C	74 D1		                MOV     A, #RTC_RADDR
+  541:	  040E	12 06 6C	                LCALL   I2C_WRITE_BYTE
+  542:	  0411	12 06 94	                LCALL   I2C_READ_ACK
+  543:	  0414	F5 31		                MOV     RTC_SEC, A
+  544:	  0416	12 06 94	                LCALL   I2C_READ_ACK
+  545:	  0419	F5 32		                MOV     RTC_MIN, A
+  546:	  041B	12 06 94	                LCALL   I2C_READ_ACK
+  547:	  041E	F5 33		                MOV     RTC_HR, A
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 11
+
+
+
+ Line  I  Addr  Code            Source
+
+  548:	  0420	12 06 94	                LCALL   I2C_READ_ACK
+  549:	  0423	F5 34		                MOV     RTC_DAY, A
+  550:	  0425	12 06 94	                LCALL   I2C_READ_ACK
+  551:	  0428	F5 35		                MOV     RTC_DATE, A
+  552:	  042A	12 06 94	                LCALL   I2C_READ_ACK
+  553:	  042D	F5 36		                MOV     RTC_MONTH, A
+  554:	  042F	12 06 A6	                LCALL   I2C_READ_NACK
+  555:	  0432	F5 37		                MOV     RTC_YEAR, A
+  556:	  0434	12 06 56	                LCALL   I2C_STOP
+  557:	  0437	22		                RET
+  558:
+  559:				;======================================================================
+  560:	  0438			DISPLAY_RTC_AND_TEMP:
+  561:	  0438	74 84		                MOV     A, #084H
+  562:	  043A	12 05 93	                LCALL   LCD_CMD
+  563:	  043D	E5 33		                MOV     A, RTC_HR
+  564:	  043F	54 3F		                ANL     A, #03FH
+  565:	  0441	12 05 C1	                LCALL   LCD_WRITE_BCD2
+  566:	  0444	74 3A		                MOV     A, #':'
+  567:	  0446	12 05 A4	                LCALL   LCD_DATA
+  568:	  0449	E5 32		                MOV     A, RTC_MIN
+  569:	  044B	54 7F		                ANL     A, #07FH
+  570:	  044D	12 05 C1	                LCALL   LCD_WRITE_BCD2
+  571:	  0450	74 3A		                MOV     A, #':'
+  572:	  0452	12 05 A4	                LCALL   LCD_DATA
+  573:	  0455	E5 31		                MOV     A, RTC_SEC
+  574:	  0457	54 7F		                ANL     A, #07FH
+  575:	  0459	12 05 C1	                LCALL   LCD_WRITE_BCD2
+  576:	  045C	74 C0		                MOV     A, #0C0H
+  577:	  045E	12 05 93	                LCALL   LCD_CMD
+  578:	  0461	E5 35		                MOV     A, RTC_DATE
+  579:	  0463	54 3F		                ANL     A, #03FH
+  580:	  0465	12 05 C1	                LCALL   LCD_WRITE_BCD2
+  581:	  0468	74 3A		                MOV     A, #':'
+  582:	  046A	12 05 A4	                LCALL   LCD_DATA
+  583:	  046D	E5 36		                MOV     A, RTC_MONTH
+  584:	  046F	54 1F		                ANL     A, #01FH
+  585:	  0471	12 05 C1	                LCALL   LCD_WRITE_BCD2
+  586:	  0474	74 20		                MOV     A, #' '
+  587:	  0476	12 05 A4	                LCALL   LCD_DATA
+  588:	  0479	74 20		                MOV     A, #' '
+  589:	  047B	12 05 A4	                LCALL   LCD_DATA
+  590:	  047E	74 C7		                MOV     A, #0C7H
+  591:	  0480	12 05 93	                LCALL   LCD_CMD
+  592:	  0483	E5 34		                MOV     A, RTC_DAY
+  593:	  0485	54 07		                ANL     A, #07H
+  594:	  0487	12 05 D5	                LCALL   LCD_WRITE_DAYNAME
+  595:	  048A	74 20		                MOV     A, #' '
+  596:	  048C	12 05 A4	                LCALL   LCD_DATA
+  597:	  048F	74 CC		                MOV     A, #0CCH
+  598:	  0491	12 05 93	                LCALL   LCD_CMD
+  599:	  0494	E5 4E		                MOV     A, DHT_LASTTEMP
+  600:	  0496	12 05 C1	                LCALL   LCD_WRITE_BCD2
+  601:	  0499	74 DF		                MOV     A, #0DFH
+  602:	  049B	12 05 A4	                LCALL   LCD_DATA
+  603:	  049E	74 43		                MOV     A, #'C'
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 12
+
+
+
+ Line  I  Addr  Code            Source
+
+  604:	  04A0	12 05 A4	                LCALL   LCD_DATA
+  605:	  04A3	22		                RET
+  606:
+  607:				;----------------------------------------------------------------------
+  608:	  04A4			RTC_WRITE_REG:
+  609:	  04A4	F5 45		                MOV     TMP, A
+  610:	  04A6	12 06 3B	                LCALL   I2C_START
+  611:	  04A9	74 D0		                MOV     A, #RTC_WADDR
+  612:	  04AB	12 06 6C	                LCALL   I2C_WRITE_BYTE
+  613:	  04AE	E8		                MOV     A, R0
+  614:	  04AF	12 06 6C	                LCALL   I2C_WRITE_BYTE
+  615:	  04B2	E5 45		                MOV     A, TMP
+  616:	  04B4	12 06 6C	                LCALL   I2C_WRITE_BYTE
+  617:	  04B7	12 06 56	                LCALL   I2C_STOP
+  618:	  04BA	22		                RET
+  619:
+  620:				;======================================================================
+  621:	  04BB			DHT11_READ:
+  622:	  04BB	C2 B5		                CLR     DHT_DATA
+  623:	  04BD	12 08 4A	                LCALL   DELAY_20MS
+  624:	  04C0	D2 B5		                SETB    DHT_DATA
+  625:	  04C2	12 08 62	                LCALL   DELAY_30US
+  626:	  04C5	12 05 03	                LCALL   WAIT_DHT_LOW
+  627:	  04C8	40 36		                JC      DHT_FAIL
+  628:	  04CA	12 05 0E	                LCALL   WAIT_DHT_HIGH
+  629:	  04CD	40 31		                JC      DHT_FAIL
+  630:	  04CF	12 05 03	                LCALL   WAIT_DHT_LOW
+  631:	  04D2	40 2C		                JC      DHT_FAIL
+  632:	  04D4	12 05 19	                LCALL   READ_DHT_BYTE
+  633:	  04D7	F5 49		                MOV     DHT_HUM_INT, A
+  634:	  04D9	12 05 19	                LCALL   READ_DHT_BYTE
+  635:	  04DC	F5 4A		                MOV     DHT_HUM_DEC, A
+  636:	  04DE	12 05 19	                LCALL   READ_DHT_BYTE
+  637:	  04E1	F5 4B		                MOV     DHT_TMP_INT, A
+  638:	  04E3	12 05 19	                LCALL   READ_DHT_BYTE
+  639:	  04E6	F5 4C		                MOV     DHT_TMP_DEC, A
+  640:	  04E8	12 05 19	                LCALL   READ_DHT_BYTE
+  641:	  04EB	F5 4D		                MOV     DHT_CHECK, A
+  642:	  04ED	E5 49		                MOV     A, DHT_HUM_INT
+  643:	  04EF	25 4A		                ADD     A, DHT_HUM_DEC
+  644:	  04F1	25 4B		                ADD     A, DHT_TMP_INT
+  645:	  04F3	25 4C		                ADD     A, DHT_TMP_DEC
+  646:	  04F5	B5 4D 08	                CJNE    A, DHT_CHECK, DHT_FAIL
+  647:	  04F8	E5 4B		                MOV     A, DHT_TMP_INT
+  648:	  04FA	12 05 31	                LCALL   BIN_TO_BCD
+  649:	  04FD	F5 4E		                MOV     DHT_LASTTEMP, A
+  650:	  04FF	22		                RET
+  651:	  0500			DHT_FAIL:
+  652:	  0500	D2 B5		                SETB    DHT_DATA
+  653:	  0502	22		                RET
+  654:
+  655:				;----------------------------------------------------------------------
+  656:	  0503			WAIT_DHT_LOW:
+  657:	  0503	7E FF		                MOV     R6, #255
+  658:	  0505	30 B5 04	WDL1:           JNB     DHT_DATA, WDL_OK
+  659:	  0508	DE FB		                DJNZ    R6, WDL1
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 13
+
+
+
+ Line  I  Addr  Code            Source
+
+  660:	  050A	D3		                SETB    C
+  661:	  050B	22		                RET
+  662:	  050C	C3		WDL_OK:         CLR     C
+  663:	  050D	22		                RET
+  664:
+  665:	  050E			WAIT_DHT_HIGH:
+  666:	  050E	7E FF		                MOV     R6, #255
+  667:	  0510	20 B5 04	WDH1:           JB      DHT_DATA, WDH_OK
+  668:	  0513	DE FB		                DJNZ    R6, WDH1
+  669:	  0515	D3		                SETB    C
+  670:	  0516	22		                RET
+  671:	  0517	C3		WDH_OK:         CLR     C
+  672:	  0518	22		                RET
+  673:
+  674:	  0519			READ_DHT_BYTE:
+  675:	  0519	7F 08		                MOV     R7, #08
+  676:	  051B	E4		                CLR     A
+  677:	  051C	12 05 0E	RDB1:           LCALL   WAIT_DHT_HIGH
+  678:	  051F	40 0E		                JC      RDB_FAIL
+  679:	  0521	12 08 68	                LCALL   SAMPLE_DELAY
+  680:	  0524	A2 B5		                MOV     C, DHT_DATA
+  681:	  0526	33		                RLC     A
+  682:	  0527	12 05 03	                LCALL   WAIT_DHT_LOW
+  683:	  052A	40 03		                JC      RDB_FAIL
+  684:	  052C	DF EE		                DJNZ    R7, RDB1
+  685:	  052E	22		                RET
+  686:	  052F	E4		RDB_FAIL:       CLR     A
+  687:	  0530	22		                RET
+  688:
+  689:				;======================================================================
+  690:	  0531			BIN_TO_BCD:
+  691:	  0531	75 F0 0A	                MOV     B, #10
+  692:	  0534	84		                DIV     AB
+  693:	  0535	C4		                SWAP    A
+  694:	  0536	45 F0		                ORL     A, B
+  695:	  0538	22		                RET
+  696:
+  697:				;======================================================================
+  698:	  0539			LCD_INIT:
+  699:	  0539	74 30		                MOV     A, #30H
+  700:	  053B	12 05 82	                LCALL   LCD_CMD_INIT
+  701:	  053E	12 08 42	                LCALL   DELAY_5MS
+  702:	  0541	74 30		                MOV     A, #30H
+  703:	  0543	12 05 82	                LCALL   LCD_CMD_INIT
+  704:	  0546	12 08 39	                LCALL   DELAY_2MS
+  705:	  0549	74 30		                MOV     A, #30H
+  706:	  054B	12 05 82	                LCALL   LCD_CMD_INIT
+  707:	  054E	12 08 39	                LCALL   DELAY_2MS
+  708:	  0551	74 38		                MOV     A, #38H
+  709:	  0553	12 05 93	                LCALL   LCD_CMD
+  710:	  0556	12 08 39	                LCALL   DELAY_2MS
+  711:	  0559	74 38		                MOV     A, #38H
+  712:	  055B	12 05 93	                LCALL   LCD_CMD
+  713:	  055E	12 08 39	                LCALL   DELAY_2MS
+  714:	  0561	74 08		                MOV     A, #08H
+  715:	  0563	12 05 93	                LCALL   LCD_CMD
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 14
+
+
+
+ Line  I  Addr  Code            Source
+
+  716:	  0566	12 08 39	                LCALL   DELAY_2MS
+  717:	  0569	74 01		                MOV     A, #01H
+  718:	  056B	12 05 93	                LCALL   LCD_CMD
+  719:	  056E	12 08 42	                LCALL   DELAY_5MS
+  720:	  0571	74 06		                MOV     A, #06H
+  721:	  0573	12 05 93	                LCALL   LCD_CMD
+  722:	  0576	12 08 39	                LCALL   DELAY_2MS
+  723:	  0579	74 0C		                MOV     A, #0CH
+  724:	  057B	12 05 93	                LCALL   LCD_CMD
+  725:	  057E	12 08 39	                LCALL   DELAY_2MS
+  726:	  0581	22		                RET
+  727:
+  728:	  0582			LCD_CMD_INIT:
+  729:	  0582	F5 90		                MOV     P1, A
+  730:	  0584	C2 B0		                CLR     LCD_RS
+  731:	  0586	C2 B1		                CLR     LCD_RW
+  732:	  0588	D2 B2		                SETB    LCD_EN
+  733:	  058A	00		                NOP
+  734:	  058B	00		                NOP
+  735:	  058C	00		                NOP
+  736:	  058D	00		                NOP
+  737:	  058E	00		                NOP
+  738:	  058F	00		                NOP
+  739:	  0590	C2 B2		                CLR     LCD_EN
+  740:	  0592	22		                RET
+  741:
+  742:	  0593			LCD_CMD:
+  743:	  0593	F5 90		                MOV     P1, A
+  744:	  0595	C2 B0		                CLR     LCD_RS
+  745:	  0597	C2 B1		                CLR     LCD_RW
+  746:	  0599	D2 B2		                SETB    LCD_EN
+  747:	  059B	12 08 34	                LCALL   DELAY_EN
+  748:	  059E	C2 B2		                CLR     LCD_EN
+  749:	  05A0	12 08 39	                LCALL   DELAY_2MS
+  750:	  05A3	22		                RET
+  751:
+  752:	  05A4			LCD_DATA:
+  753:	  05A4	F5 90		                MOV     P1, A
+  754:	  05A6	D2 B0		                SETB    LCD_RS
+  755:	  05A8	C2 B1		                CLR     LCD_RW
+  756:	  05AA	D2 B2		                SETB    LCD_EN
+  757:	  05AC	12 08 34	                LCALL   DELAY_EN
+  758:	  05AF	C2 B2		                CLR     LCD_EN
+  759:	  05B1	12 08 39	                LCALL   DELAY_2MS
+  760:	  05B4	22		                RET
+  761:
+  762:	  05B5			LCD_PRINT:
+  763:	  05B5	E4		                CLR     A
+  764:	  05B6	93		LP1:            MOVC    A, @A+DPTR
+  765:	  05B7	60 07		                JZ      LPD
+  766:	  05B9	12 05 A4	                LCALL   LCD_DATA
+  767:	  05BC	A3		                INC     DPTR
+  768:	  05BD	E4		                CLR     A
+  769:	  05BE	80 F6		                SJMP    LP1
+  770:	  05C0	22		LPD:            RET
+  771:
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 15
+
+
+
+ Line  I  Addr  Code            Source
+
+  772:	  05C1			LCD_WRITE_BCD2:
+  773:	  05C1	F5 45		                MOV     TMP, A
+  774:	  05C3	C4		                SWAP    A
+  775:	  05C4	54 0F		                ANL     A, #0FH
+  776:	  05C6	24 30		                ADD     A, #'0'
+  777:	  05C8	12 05 A4	                LCALL   LCD_DATA
+  778:	  05CB	E5 45		                MOV     A, TMP
+  779:	  05CD	54 0F		                ANL     A, #0FH
+  780:	  05CF	24 30		                ADD     A, #'0'
+  781:	  05D1	12 05 A4	                LCALL   LCD_DATA
+  782:	  05D4	22		                RET
+  783:
+  784:	  05D5			LCD_WRITE_DAYNAME:
+  785:	  05D5	B4 01 06	                CJNE    A, #01H, LWD_2
+  786:	  05D8	90 08 93	                MOV     DPTR, #MSG_SUN
+  787:	  05DB	02 06 17	                LJMP    LWD_P
+  788:	  05DE	B4 02 06	LWD_2:          CJNE    A, #02H, LWD_3
+  789:	  05E1	90 08 97	                MOV     DPTR, #MSG_MON
+  790:	  05E4	02 06 17	                LJMP    LWD_P
+  791:	  05E7	B4 03 06	LWD_3:          CJNE    A, #03H, LWD_4
+  792:	  05EA	90 08 9B	                MOV     DPTR, #MSG_TUE
+  793:	  05ED	02 06 17	                LJMP    LWD_P
+  794:	  05F0	B4 04 06	LWD_4:          CJNE    A, #04H, LWD_5
+  795:	  05F3	90 08 9F	                MOV     DPTR, #MSG_WED
+  796:	  05F6	02 06 17	                LJMP    LWD_P
+  797:	  05F9	B4 05 06	LWD_5:          CJNE    A, #05H, LWD_6
+  798:	  05FC	90 08 A3	                MOV     DPTR, #MSG_THU
+  799:	  05FF	02 06 17	                LJMP    LWD_P
+  800:	  0602	B4 06 06	LWD_6:          CJNE    A, #06H, LWD_7
+  801:	  0605	90 08 A7	                MOV     DPTR, #MSG_FRI
+  802:	  0608	02 06 17	                LJMP    LWD_P
+  803:	  060B	B4 07 06	LWD_7:          CJNE    A, #07H, LWD_X
+  804:	  060E	90 08 AB	                MOV     DPTR, #MSG_SAT
+  805:	  0611	02 06 17	                LJMP    LWD_P
+  806:	  0614	90 08 AF	LWD_X:          MOV     DPTR, #MSG_DASH3
+  807:	  0617	12 05 B5	LWD_P:          LCALL   LCD_PRINT
+  808:	  061A	22		                RET
+  809:
+  810:				;======================================================================
+  811:	  061B			I2C_RECOVER:
+  812:	  061B	D2 B7		                SETB    I2C_SDA
+  813:	  061D	7F 09		                MOV     R7, #09H
+  814:	  061F			IR_LOOP:
+  815:	  061F	C2 B6		                CLR     I2C_SCL
+  816:	  0621	12 06 CB	                LCALL   I2C_DELAY
+  817:	  0624	D2 B6		                SETB    I2C_SCL
+  818:	  0626	12 06 CB	                LCALL   I2C_DELAY
+  819:	  0629	DF F4		                DJNZ    R7, IR_LOOP
+  820:	  062B	C2 B7		                CLR     I2C_SDA
+  821:	  062D	12 06 CB	                LCALL   I2C_DELAY
+  822:	  0630	D2 B6		                SETB    I2C_SCL
+  823:	  0632	12 06 CB	                LCALL   I2C_DELAY
+  824:	  0635	D2 B7		                SETB    I2C_SDA
+  825:	  0637	12 06 CB	                LCALL   I2C_DELAY
+  826:	  063A	22		                RET
+  827:
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 16
+
+
+
+ Line  I  Addr  Code            Source
+
+  828:	  063B			I2C_START:
+  829:	  063B	D2 B7		                SETB    I2C_SDA
+  830:	  063D	12 06 CB	                LCALL   I2C_DELAY
+  831:	  0640	D2 B6		                SETB    I2C_SCL
+  832:	  0642	12 06 CB	                LCALL   I2C_DELAY
+  833:	  0645	12 06 CB	                LCALL   I2C_DELAY
+  834:	  0648	C2 B7		                CLR     I2C_SDA
+  835:	  064A	12 06 CB	                LCALL   I2C_DELAY
+  836:	  064D	12 06 CB	                LCALL   I2C_DELAY
+  837:	  0650	C2 B6		                CLR     I2C_SCL
+  838:	  0652	12 06 CB	                LCALL   I2C_DELAY
+  839:	  0655	22		                RET
+  840:
+  841:	  0656			I2C_STOP:
+  842:	  0656	C2 B7		                CLR     I2C_SDA
+  843:	  0658	12 06 CB	                LCALL   I2C_DELAY
+  844:	  065B	D2 B6		                SETB    I2C_SCL
+  845:	  065D	12 06 CB	                LCALL   I2C_DELAY
+  846:	  0660	12 06 CB	                LCALL   I2C_DELAY
+  847:	  0663	D2 B7		                SETB    I2C_SDA
+  848:	  0665	12 06 CB	                LCALL   I2C_DELAY
+  849:	  0668	12 06 CB	                LCALL   I2C_DELAY
+  850:	  066B	22		                RET
+  851:
+  852:	  066C			I2C_WRITE_BYTE:
+  853:	  066C	7F 08		                MOV     R7, #08H
+  854:	  066E	A2 E7		IWB1:           MOV     C, ACC.7
+  855:	  0670	92 B7		                MOV     I2C_SDA, C
+  856:	  0672	12 06 CB	                LCALL   I2C_DELAY
+  857:	  0675	D2 B6		                SETB    I2C_SCL
+  858:	  0677	12 06 CB	                LCALL   I2C_DELAY
+  859:	  067A	C2 B6		                CLR     I2C_SCL
+  860:	  067C	12 06 CB	                LCALL   I2C_DELAY
+  861:	  067F	23		                RL      A
+  862:	  0680	DF EC		                DJNZ    R7, IWB1
+  863:	  0682	D2 B7		                SETB    I2C_SDA
+  864:	  0684	12 06 CB	                LCALL   I2C_DELAY
+  865:	  0687	D2 B6		                SETB    I2C_SCL
+  866:	  0689	12 06 CB	                LCALL   I2C_DELAY
+  867:	  068C	A2 B7		                MOV     C, I2C_SDA
+  868:	  068E	C2 B6		                CLR     I2C_SCL
+  869:	  0690	12 06 CB	                LCALL   I2C_DELAY
+  870:	  0693	22		                RET
+  871:
+  872:	  0694			I2C_READ_ACK:
+  873:	  0694	12 06 B6	                LCALL   I2C_READ_BYTE
+  874:	  0697	C2 B7		                CLR     I2C_SDA
+  875:	  0699	12 06 CB	                LCALL   I2C_DELAY
+  876:	  069C	D2 B6		                SETB    I2C_SCL
+  877:	  069E	12 06 CB	                LCALL   I2C_DELAY
+  878:	  06A1	C2 B6		                CLR     I2C_SCL
+  879:	  06A3	D2 B7		                SETB    I2C_SDA
+  880:	  06A5	22		                RET
+  881:
+  882:	  06A6			I2C_READ_NACK:
+  883:	  06A6	12 06 B6	                LCALL   I2C_READ_BYTE
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 17
+
+
+
+ Line  I  Addr  Code            Source
+
+  884:	  06A9	D2 B7		                SETB    I2C_SDA
+  885:	  06AB	12 06 CB	                LCALL   I2C_DELAY
+  886:	  06AE	D2 B6		                SETB    I2C_SCL
+  887:	  06B0	12 06 CB	                LCALL   I2C_DELAY
+  888:	  06B3	C2 B6		                CLR     I2C_SCL
+  889:	  06B5	22		                RET
+  890:
+  891:	  06B6			I2C_READ_BYTE:
+  892:	  06B6	7F 08		                MOV     R7, #08H
+  893:	  06B8	E4		                CLR     A
+  894:	  06B9	D2 B7		                SETB    I2C_SDA
+  895:	  06BB	D2 B6		IRB1:           SETB    I2C_SCL
+  896:	  06BD	12 06 CB	                LCALL   I2C_DELAY
+  897:	  06C0	A2 B7		                MOV     C, I2C_SDA
+  898:	  06C2	33		                RLC     A
+  899:	  06C3	C2 B6		                CLR     I2C_SCL
+  900:	  06C5	12 06 CB	                LCALL   I2C_DELAY
+  901:	  06C8	DF F1		                DJNZ    R7, IRB1
+  902:	  06CA	22		                RET
+  903:
+  904:	  06CB			I2C_DELAY:
+  905:	  06CB	00		                NOP
+  906:	  06CC	00		                NOP
+  907:	  06CD	00		                NOP
+  908:	  06CE	00		                NOP
+  909:	  06CF	00		                NOP
+  910:	  06D0	00		                NOP
+  911:	  06D1	00		                NOP
+  912:	  06D2	00		                NOP
+  913:	  06D3	00		                NOP
+  914:	  06D4	00		                NOP
+  915:	  06D5	22		                RET
+  916:
+  917:				;======================================================================
+  918:	  06D6			KEYPAD_GETKEY:
+  919:	  06D6	75 30 00	                MOV     KEYVAL, #00H
+  920:	  06D9	75 A0 FF	                MOV     P2, #0FFH
+  921:	  06DC	75 A0 FE	                MOV     P2, #0FEH
+  922:	  06DF	00		                NOP
+  923:	  06E0	00		                NOP
+  924:	  06E1	30 A4 0C	                JNB     P2.4, K0R0
+  925:	  06E4	30 A5 14	                JNB     P2.5, K0R1
+  926:	  06E7	30 A6 1C	                JNB     P2.6, K0R2
+  927:	  06EA	30 A7 24	                JNB     P2.7, K0R3
+  928:	  06ED	02 07 1F	                LJMP    K_C1
+  929:	  06F0	75 30 37	K0R0:           MOV     KEYVAL, #'7'
+  930:	  06F3	12 07 ED	                LCALL   KP_CONFIRM_R0
+  931:	  06F6	40 24		                JC      K_C1_JMP
+  932:	  06F8	02 07 E6	                LJMP    KP_DONE
+  933:	  06FB	75 30 34	K0R1:           MOV     KEYVAL, #'4'
+  934:	  06FE	12 07 F5	                LCALL   KP_CONFIRM_R1
+  935:	  0701	40 19		                JC      K_C1_JMP
+  936:	  0703	02 07 E6	                LJMP    KP_DONE
+  937:	  0706	75 30 31	K0R2:           MOV     KEYVAL, #'1'
+  938:	  0709	12 07 FD	                LCALL   KP_CONFIRM_R2
+  939:	  070C	40 0E		                JC      K_C1_JMP
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 18
+
+
+
+ Line  I  Addr  Code            Source
+
+  940:	  070E	02 07 E6	                LJMP    KP_DONE
+  941:	  0711	75 30 43	K0R3:           MOV     KEYVAL, #'C'
+  942:	  0714	12 08 05	                LCALL   KP_CONFIRM_R3
+  943:	  0717	40 03		                JC      K_C1_JMP
+  944:	  0719	02 07 E6	                LJMP    KP_DONE
+  945:	  071C	02 07 1F	K_C1_JMP:       LJMP    K_C1
+  946:	  071F			K_C1:
+  947:	  071F	75 A0 FD	                MOV     P2, #0FDH
+  948:	  0722	00		                NOP
+  949:	  0723	00		                NOP
+  950:	  0724	30 A4 0C	                JNB     P2.4, K1R0
+  951:	  0727	30 A5 14	                JNB     P2.5, K1R1
+  952:	  072A	30 A6 1C	                JNB     P2.6, K1R2
+  953:	  072D	30 A7 24	                JNB     P2.7, K1R3
+  954:	  0730	02 07 62	                LJMP    K_C2
+  955:	  0733	75 30 38	K1R0:           MOV     KEYVAL, #'8'
+  956:	  0736	12 07 ED	                LCALL   KP_CONFIRM_R0
+  957:	  0739	40 24		                JC      K_C2_JMP
+  958:	  073B	02 07 E6	                LJMP    KP_DONE
+  959:	  073E	75 30 35	K1R1:           MOV     KEYVAL, #'5'
+  960:	  0741	12 07 F5	                LCALL   KP_CONFIRM_R1
+  961:	  0744	40 19		                JC      K_C2_JMP
+  962:	  0746	02 07 E6	                LJMP    KP_DONE
+  963:	  0749	75 30 32	K1R2:           MOV     KEYVAL, #'2'
+  964:	  074C	12 07 FD	                LCALL   KP_CONFIRM_R2
+  965:	  074F	40 0E		                JC      K_C2_JMP
+  966:	  0751	02 07 E6	                LJMP    KP_DONE
+  967:	  0754	75 30 30	K1R3:           MOV     KEYVAL, #'0'
+  968:	  0757	12 08 05	                LCALL   KP_CONFIRM_R3
+  969:	  075A	40 03		                JC      K_C2_JMP
+  970:	  075C	02 07 E6	                LJMP    KP_DONE
+  971:	  075F	02 07 62	K_C2_JMP:       LJMP    K_C2
+  972:	  0762			K_C2:
+  973:	  0762	75 A0 FB	                MOV     P2, #0FBH
+  974:	  0765	00		                NOP
+  975:	  0766	00		                NOP
+  976:	  0767	30 A4 0C	                JNB     P2.4, K2R0
+  977:	  076A	30 A5 14	                JNB     P2.5, K2R1
+  978:	  076D	30 A6 1C	                JNB     P2.6, K2R2
+  979:	  0770	30 A7 24	                JNB     P2.7, K2R3
+  980:	  0773	02 07 A5	                LJMP    K_C3
+  981:	  0776	75 30 39	K2R0:           MOV     KEYVAL, #'9'
+  982:	  0779	12 07 ED	                LCALL   KP_CONFIRM_R0
+  983:	  077C	40 24		                JC      K_C3_JMP
+  984:	  077E	02 07 E6	                LJMP    KP_DONE
+  985:	  0781	75 30 36	K2R1:           MOV     KEYVAL, #'6'
+  986:	  0784	12 07 F5	                LCALL   KP_CONFIRM_R1
+  987:	  0787	40 19		                JC      K_C3_JMP
+  988:	  0789	02 07 E6	                LJMP    KP_DONE
+  989:	  078C	75 30 33	K2R2:           MOV     KEYVAL, #'3'
+  990:	  078F	12 07 FD	                LCALL   KP_CONFIRM_R2
+  991:	  0792	40 0E		                JC      K_C3_JMP
+  992:	  0794	02 07 E6	                LJMP    KP_DONE
+  993:	  0797	75 30 3D	K2R3:           MOV     KEYVAL, #'='
+  994:	  079A	12 08 05	                LCALL   KP_CONFIRM_R3
+  995:	  079D	40 03		                JC      K_C3_JMP
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 19
+
+
+
+ Line  I  Addr  Code            Source
+
+  996:	  079F	02 07 E6	                LJMP    KP_DONE
+  997:	  07A2	02 07 A5	K_C3_JMP:       LJMP    K_C3
+  998:	  07A5			K_C3:
+  999:	  07A5	75 A0 F7	                MOV     P2, #0F7H
+ 1000:	  07A8	00		                NOP
+ 1001:	  07A9	00		                NOP
+ 1002:	  07AA	30 A4 0C	                JNB     P2.4, K3R0
+ 1003:	  07AD	30 A5 12	                JNB     P2.5, K3R1
+ 1004:	  07B0	30 A6 18	                JNB     P2.6, K3R2
+ 1005:	  07B3	30 A7 1E	                JNB     P2.7, K3R3
+ 1006:	  07B6	02 07 DF	                LJMP    KP_NONE
+ 1007:	  07B9	75 30 00	K3R0:           MOV     KEYVAL, #00H
+ 1008:	  07BC	12 07 ED	                LCALL   KP_CONFIRM_R0
+ 1009:	  07BF	02 07 DF	                LJMP    KP_NONE
+ 1010:	  07C2	75 30 00	K3R1:           MOV     KEYVAL, #00H
+ 1011:	  07C5	12 07 F5	                LCALL   KP_CONFIRM_R1
+ 1012:	  07C8	02 07 DF	                LJMP    KP_NONE
+ 1013:	  07CB	75 30 00	K3R2:           MOV     KEYVAL, #00H
+ 1014:	  07CE	12 07 FD	                LCALL   KP_CONFIRM_R2
+ 1015:	  07D1	02 07 DF	                LJMP    KP_NONE
+ 1016:	  07D4	75 30 2B	K3R3:           MOV     KEYVAL, #'+'
+ 1017:	  07D7	12 08 05	                LCALL   KP_CONFIRM_R3
+ 1018:	  07DA	40 03		                JC      KP_NONE
+ 1019:	  07DC	02 07 E6	                LJMP    KP_DONE
+ 1020:	  07DF			KP_NONE:
+ 1021:	  07DF	75 30 00	                MOV     KEYVAL, #00H
+ 1022:	  07E2	75 A0 FF	                MOV     P2, #0FFH
+ 1023:	  07E5	22		                RET
+ 1024:	  07E6			KP_DONE:
+ 1025:	  07E6	12 08 11	                LCALL   KP_WAIT_RELEASE
+ 1026:	  07E9	75 A0 FF	                MOV     P2, #0FFH
+ 1027:	  07EC	22		                RET
+ 1028:	  07ED			KP_CONFIRM_R0:
+ 1029:	  07ED	12 08 4A	                LCALL   DELAY_20MS
+ 1030:	  07F0	30 A4 1A	                JNB     P2.4, KP_OK
+ 1031:	  07F3	80 1A		                SJMP    KP_BAD
+ 1032:	  07F5			KP_CONFIRM_R1:
+ 1033:	  07F5	12 08 4A	                LCALL   DELAY_20MS
+ 1034:	  07F8	30 A5 12	                JNB     P2.5, KP_OK
+ 1035:	  07FB	80 12		                SJMP    KP_BAD
+ 1036:	  07FD			KP_CONFIRM_R2:
+ 1037:	  07FD	12 08 4A	                LCALL   DELAY_20MS
+ 1038:	  0800	30 A6 0A	                JNB     P2.6, KP_OK
+ 1039:	  0803	80 0A		                SJMP    KP_BAD
+ 1040:	  0805			KP_CONFIRM_R3:
+ 1041:	  0805	12 08 4A	                LCALL   DELAY_20MS
+ 1042:	  0808	30 A7 02	                JNB     P2.7, KP_OK
+ 1043:	  080B	80 02		                SJMP    KP_BAD
+ 1044:	  080D	C3		KP_OK:          CLR     C
+ 1045:	  080E	22		                RET
+ 1046:	  080F	D3		KP_BAD:         SETB    C
+ 1047:	  0810	22		                RET
+ 1048:	  0811			KP_WAIT_RELEASE:
+ 1049:	  0811	75 A0 F0	KWR1:           MOV     P2, #0F0H
+ 1050:	  0814	E5 A0		                MOV     A, P2
+ 1051:	  0816	54 F0		                ANL     A, #0F0H
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 20
+
+
+
+ Line  I  Addr  Code            Source
+
+ 1052:	  0818	B4 F0 F6	                CJNE    A, #0F0H, KWR1
+ 1053:	  081B	12 08 4A	                LCALL   DELAY_20MS
+ 1054:	  081E	75 A0 FF	                MOV     P2, #0FFH
+ 1055:	  0821	22		                RET
+ 1056:
+ 1057:				;======================================================================
+ 1058:	  0822			IS_NUMERIC_KEY:
+ 1059:	  0822	E5 30		                MOV     A, KEYVAL
+ 1060:	  0824	C3		                CLR     C
+ 1061:	  0825	94 30		                SUBB    A, #'0'
+ 1062:	  0827	40 09		                JC      INK_BAD
+ 1063:	  0829	74 39		                MOV     A, #'9'
+ 1064:	  082B	C3		                CLR     C
+ 1065:	  082C	95 30		                SUBB    A, KEYVAL
+ 1066:	  082E	40 02		                JC      INK_BAD
+ 1067:	  0830	C3		                CLR     C
+ 1068:	  0831	22		                RET
+ 1069:	  0832	D3		INK_BAD:        SETB    C
+ 1070:	  0833	22		                RET
+ 1071:
+ 1072:				;======================================================================
+ 1073:	  0834			DELAY_EN:
+ 1074:	  0834	00		                NOP
+ 1075:	  0835	00		                NOP
+ 1076:	  0836	00		                NOP
+ 1077:	  0837	00		                NOP
+ 1078:	  0838	22		                RET
+ 1079:
+ 1080:	  0839			DELAY_2MS:
+ 1081:	  0839	7C 04		                MOV     R4, #4
+ 1082:	  083B	7D FA		D2A:            MOV     R5, #250
+ 1083:	  083D	DD FE		D2B:            DJNZ    R5, D2B
+ 1084:	  083F	DC FA		                DJNZ    R4, D2A
+ 1085:	  0841	22		                RET
+ 1086:
+ 1087:	  0842			DELAY_5MS:
+ 1088:	  0842	7B 02		                MOV     R3, #2
+ 1089:	  0844	12 08 39	D5A:            LCALL   DELAY_2MS
+ 1090:	  0847	DB FB		                DJNZ    R3, D5A
+ 1091:	  0849	22		                RET
+ 1092:
+ 1093:	  084A			DELAY_20MS:
+ 1094:	  084A	7A 0A		                MOV     R2, #10
+ 1095:	  084C	12 08 39	D20A:           LCALL   DELAY_2MS
+ 1096:	  084F	DA FB		                DJNZ    R2, D20A
+ 1097:	  0851	22		                RET
+ 1098:
+ 1099:	  0852			DELAY_50MS:
+ 1100:	  0852	79 19		                MOV     R1, #25
+ 1101:	  0854	12 08 39	D50A:           LCALL   DELAY_2MS
+ 1102:	  0857	D9 FB		                DJNZ    R1, D50A
+ 1103:	  0859	22		                RET
+ 1104:
+ 1105:	  085A			DELAY_2SEC:
+ 1106:	  085A	78 64		                MOV     R0, #100
+ 1107:	  085C	12 08 4A	D2SA:           LCALL   DELAY_20MS
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 21
+
+
+
+ Line  I  Addr  Code            Source
+
+ 1108:	  085F	D8 FB		                DJNZ    R0, D2SA
+ 1109:	  0861	22		                RET
+ 1110:
+ 1111:	  0862			DELAY_30US:
+ 1112:	  0862	78 08		                MOV     R0, #8
+ 1113:	  0864	00		D30A:           NOP
+ 1114:	  0865	D8 FD		                DJNZ    R0, D30A
+ 1115:	  0867	22		                RET
+ 1116:
+ 1117:	  0868			SAMPLE_DELAY:
+ 1118:	  0868	78 0C		                MOV     R0, #12
+ 1119:	  086A	00		SDL1:           NOP
+ 1120:	  086B	D8 FD		                DJNZ    R0, SDL1
+ 1121:	  086D	22		                RET
+ 1122:
+ 1123:				;======================================================================
+ 1124:	  086E	49 6E 69 74	MSG_INIT:       DB      'Initialize',00H
+	  0872	69 61 6C 69
+	  0876	7A 65 00
+ 1125:	  0879	53 61 76 65	MSG_SAVED:      DB      'Saved',00H
+	  087D	64 00
+ 1126:	  087F	30 30 3A 30	MSG_TIME_ZERO:  DB      '00:00:00',00H
+	  0883	30 3A 30 30
+	  0887	00
+ 1127:	  0888	30 31 3A 30	MSG_DATE_DEFAULT: DB    '01:01',00H
+	  088C	31 00
+ 1128:	  088E	2D 2D DF 43	MSG_TEMP_DASH:  DB      '--',0DFH,'C',00H
+	  0892	00
+ 1129:	  0893	53 55 4E 00	MSG_SUN:        DB      'SUN',00H
+ 1130:	  0897	4D 4F 4E 00	MSG_MON:        DB      'MON',00H
+ 1131:	  089B	54 55 45 00	MSG_TUE:        DB      'TUE',00H
+ 1132:	  089F	57 45 44 00	MSG_WED:        DB      'WED',00H
+ 1133:	  08A3	54 48 55 00	MSG_THU:        DB      'THU',00H
+ 1134:	  08A7	46 52 49 00	MSG_FRI:        DB      'FRI',00H
+ 1135:	  08AB	53 41 54 00	MSG_SAT:        DB      'SAT',00H
+ 1136:	  08AF	2D 2D 2D 00	MSG_DASH3:      DB      '---',00H
+ 1137:
+ 1138:				                END
+
+
+
+
+
+                     register banks used:  ---
+
+                     no errors
+
+
+
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 22
+
+
+
+
+
+	       L I S T   O F   S Y M B O L S
+	       =============================
+
+
+SYMBOL				  TYPE     VALUE	LINE
+------------------------------------------------------------
+??ASEM_51			  NUMBER    8051
+??VERSION			  NUMBER    0130
+AC				  BIT	      D6
+ACC				  DATA	      E0
+ADVANCE_INPUT_CURSOR		  CODE	    01F5	 262
+AIC_1				  CODE	    01FE	 267
+AIC_2				  CODE	    0205	 270
+AIC_3				  CODE	    020C	 273
+AIC_4				  CODE	    0213	 276
+AIC_5				  CODE	    021A	 279
+AIC_6				  CODE	    0221	 282
+AIC_7				  CODE	    0228	 285
+AIC_8				  CODE	    022F	 288
+AIC_9				  CODE	    0236	 291
+B				  DATA	      F0
+BIN_TO_BCD			  CODE	    0531	 690
+CHECK_POWER_SAVE		  CODE	    00D2	 137
+CURSORADR			  NUMBER    0039	  19
+CY				  BIT	      D7
+D20A				  CODE	    084C	1095
+D2A				  CODE	    083B	1082
+D2B				  CODE	    083D	1083
+D2SA				  CODE	    085C	1107
+D30A				  CODE	    0864	1113
+D50A				  CODE	    0854	1101
+D5A				  CODE	    0844	1089
+DAYIDX				  NUMBER    0044	  30
+DAYIDX_TO_RTC			  CODE	    03D5	 510
+DELAY_20MS			  CODE	    084A	1093
+DELAY_2MS			  CODE	    0839	1080
+DELAY_2SEC			  CODE	    085A	1105
+DELAY_30US			  CODE	    0862	1111
+DELAY_50MS			  CODE	    0852	1099
+DELAY_5MS			  CODE	    0842	1087
+DELAY_EN			  CODE	    0834	1073
+DHT11_READ			  CODE	    04BB	 621
+DHT_CHECK			  NUMBER    004D	  39
+DHT_DATA			  BIT	      B5	   7
+DHT_FAIL			  CODE	    0500	 651
+DHT_HUM_DEC			  NUMBER    004A	  36
+DHT_HUM_INT			  NUMBER    0049	  35
+DHT_LASTTEMP			  NUMBER    004E	  40
+DHT_TMP_DEC			  NUMBER    004C	  38
+DHT_TMP_INT			  NUMBER    004B	  37
+DISPLAY_RTC_AND_TEMP		  CODE	    0438	 560
+DITR_1				  CODE	    03DB	 514
+DITR_2				  CODE	    03E1	 517
+DITR_3				  CODE	    03E7	 520
+DITR_4				  CODE	    03ED	 523
+DITR_5				  CODE	    03F3	 526
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 23
+
+
+
+SYMBOL				  TYPE     VALUE	LINE
+------------------------------------------------------------
+DITR_6				  CODE	    03F9	 529
+DPH				  DATA	      83
+DPL				  DATA	      82
+EA				  BIT	      AF
+ENTER_POWER_SAVE		  CODE	    00D6	 140
+ES				  BIT	      AC
+ET0				  BIT	      A9
+ET1				  BIT	      AB
+EX0				  BIT	      A8
+EX1				  BIT	      AA
+EXTI0				  CODE	    0003
+EXTI1				  CODE	    0013
+F0				  BIT	      D5
+I2C_DELAY			  CODE	    06CB	 904
+I2C_READ_ACK			  CODE	    0694	 872
+I2C_READ_BYTE			  CODE	    06B6	 891
+I2C_READ_NACK			  CODE	    06A6	 882
+I2C_RECOVER			  CODE	    061B	 811
+I2C_SCL				  BIT	      B6	   8
+I2C_SDA				  BIT	      B7	   9
+I2C_START			  CODE	    063B	 828
+I2C_STOP			  CODE	    0656	 841
+I2C_WRITE_BYTE			  CODE	    066C	 852
+IE				  DATA	      A8
+IE0				  BIT	      89
+IE1				  BIT	      8B
+INK_BAD				  CODE	    0832	1069
+INT0				  BIT	      B2
+INT1				  BIT	      B3
+IN_DD_T				  NUMBER    0040	  26
+IN_DD_U				  NUMBER    0041	  27
+IN_HH_T				  NUMBER    003A	  20
+IN_HH_U				  NUMBER    003B	  21
+IN_MM_T				  NUMBER    003C	  22
+IN_MM_U				  NUMBER    003D	  23
+IN_MO_T				  NUMBER    0042	  28
+IN_MO_U				  NUMBER    0043	  29
+IN_SS_T				  NUMBER    003E	  24
+IN_SS_U				  NUMBER    003F	  25
+IP				  DATA	      B8
+IRB1				  CODE	    06BB	 895
+IR_LOOP				  CODE	    061F	 814
+IS_NUMERIC_KEY			  CODE	    0822	1058
+IT0				  BIT	      88
+IT1				  BIT	      8A
+IWB1				  CODE	    066E	 854
+K0R0				  CODE	    06F0	 929
+K0R1				  CODE	    06FB	 933
+K0R2				  CODE	    0706	 937
+K0R3				  CODE	    0711	 941
+K1R0				  CODE	    0733	 955
+K1R1				  CODE	    073E	 959
+K1R2				  CODE	    0749	 963
+K1R3				  CODE	    0754	 967
+K2R0				  CODE	    0776	 981
+K2R1				  CODE	    0781	 985
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 24
+
+
+
+SYMBOL				  TYPE     VALUE	LINE
+------------------------------------------------------------
+K2R2				  CODE	    078C	 989
+K2R3				  CODE	    0797	 993
+K3R0				  CODE	    07B9	1007
+K3R1				  CODE	    07C2	1010
+K3R2				  CODE	    07CB	1013
+K3R3				  CODE	    07D4	1016
+KEYPAD_GETKEY			  CODE	    06D6	 918
+KEYVAL				  NUMBER    0030	  10
+KP_BAD				  CODE	    080F	1046
+KP_CONFIRM_R0			  CODE	    07ED	1028
+KP_CONFIRM_R1			  CODE	    07F5	1032
+KP_CONFIRM_R2			  CODE	    07FD	1036
+KP_CONFIRM_R3			  CODE	    0805	1040
+KP_DONE				  CODE	    07E6	1024
+KP_NONE				  CODE	    07DF	1020
+KP_OK				  CODE	    080D	1044
+KP_WAIT_RELEASE			  CODE	    0811	1048
+KWR1				  CODE	    0811	1049
+K_C1				  CODE	    071F	 946
+K_C1_JMP			  CODE	    071C	 945
+K_C2				  CODE	    0762	 972
+K_C2_JMP			  CODE	    075F	 971
+K_C3				  CODE	    07A5	 998
+K_C3_JMP			  CODE	    07A2	 997
+LCD_CMD				  CODE	    0593	 742
+LCD_CMD_INIT			  CODE	    0582	 728
+LCD_DATA			  CODE	    05A4	 752
+LCD_EN				  BIT	      B2	   5
+LCD_INIT			  CODE	    0539	 698
+LCD_PRINT			  CODE	    05B5	 762
+LCD_RS				  BIT	      B0	   3
+LCD_RW				  BIT	      B1	   4
+LCD_WRITE_BCD2			  CODE	    05C1	 772
+LCD_WRITE_DAYNAME		  CODE	    05D5	 784
+LOOPCNT				  NUMBER    0048	  34
+LP1				  CODE	    05B6	 764
+LPD				  CODE	    05C0	 770
+LWD_2				  CODE	    05DE	 788
+LWD_3				  CODE	    05E7	 791
+LWD_4				  CODE	    05F0	 794
+LWD_5				  CODE	    05F9	 797
+LWD_6				  CODE	    0602	 800
+LWD_7				  CODE	    060B	 803
+LWD_P				  CODE	    0617	 807
+LWD_X				  CODE	    0614	 806
+MODE_FLAG			  NUMBER    004F	  41
+MSG_DASH3			  CODE	    08AF	1136
+MSG_DATE_DEFAULT		  CODE	    0888	1127
+MSG_FRI				  CODE	    08A7	1134
+MSG_INIT			  CODE	    086E	1124
+MSG_MON				  CODE	    0897	1130
+MSG_SAT				  CODE	    08AB	1135
+MSG_SAVED			  CODE	    0879	1125
+MSG_SUN				  CODE	    0893	1129
+MSG_TEMP_DASH			  CODE	    088E	1128
+MSG_THU				  CODE	    08A3	1133
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 25
+
+
+
+SYMBOL				  TYPE     VALUE	LINE
+------------------------------------------------------------
+MSG_TIME_ZERO			  CODE	    087F	1126
+MSG_TUE				  CODE	    089B	1131
+MSG_WED				  CODE	    089F	1132
+ND_OK				  CODE	    0244	 300
+NEXT_DAY			  CODE	    023A	 295
+OV				  BIT	      D2
+P				  BIT	      D0
+P0				  DATA	      80
+P1				  DATA	      90
+P2				  DATA	      A0
+P3				  DATA	      B0
+PCON				  DATA	      87
+PS				  BIT	      BC
+PSW				  DATA	      D0
+PS_RUN_REFRESH			  CODE	    00EE	 152
+PS_WAIT_LOW			  CODE	    00DB	 143
+PT0				  BIT	      B9
+PT1				  BIT	      BB
+PWR_KEY				  BIT	      B4	   6
+PX0				  BIT	      B8
+PX1				  BIT	      BA
+RB8				  BIT	      9A
+RD				  BIT	      B7
+RDB1				  CODE	    051C	 677
+RDB_FAIL			  CODE	    052F	 686
+READ_DHT_BYTE			  CODE	    0519	 674
+REN				  BIT	      9C
+RESET				  CODE	    0000
+RI				  BIT	      98
+RM_SKIP_DHT			  CODE	    00B6	 123
+RS0				  BIT	      D3
+RS1				  BIT	      D4
+RTC_DATE			  NUMBER    0035	  15
+RTC_DAY				  NUMBER    0034	  14
+RTC_HR				  NUMBER    0033	  13
+RTC_MIN				  NUMBER    0032	  12
+RTC_MONTH			  NUMBER    0036	  16
+RTC_RADDR			  NUMBER    00D1	  43
+RTC_READ_ALL			  CODE	    03FC	 533
+RTC_SEC				  NUMBER    0031	  11
+RTC_WADDR			  NUMBER    00D0	  42
+RTC_WRITE_REG			  CODE	    04A4	 608
+RTC_YEAR			  NUMBER    0037	  17
+RUNMODE_DELAY			  CODE	    00CC	 132
+RUNMODE_LOOP			  CODE	    00A3	 115
+RXD				  BIT	      B0
+SAMPLE_DELAY			  CODE	    0868	1117
+SBUF				  DATA	      99
+SCON				  DATA	      98
+SDI_1				  CODE	    025D	 314
+SDI_2				  CODE	    0266	 317
+SDI_3				  CODE	    026F	 320
+SDI_4				  CODE	    0278	 323
+SDI_5				  CODE	    0281	 326
+SDI_6				  CODE	    028A	 329
+SDI_PRINT			  CODE	    028D	 330
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 26
+
+
+
+SYMBOL				  TYPE     VALUE	LINE
+------------------------------------------------------------
+SDL1				  CODE	    086A	1119
+SD_1				  CODE	    01A4	 231
+SD_2				  CODE	    01AD	 234
+SD_3				  CODE	    01B6	 237
+SD_4				  CODE	    01BF	 240
+SD_5				  CODE	    01C8	 243
+SD_6				  CODE	    01D1	 246
+SD_7				  CODE	    01DA	 249
+SD_8				  CODE	    01E3	 252
+SD_9				  CODE	    01EC	 255
+SD_GO				  CODE	    018F	 222
+SD_NEXT				  CODE	    01EF	 256
+SETMODE_INIT			  CODE	    00F8	 159
+SETMODE_LOOP			  CODE	    0049	  75
+SETMODE_REDRAW			  CODE	    011F	 173
+SET_IDX				  NUMBER    0038	  18
+SHOW_DAY_FROM_IDX		  CODE	    024D	 307
+SINT				  CODE	    0023
+SM0				  BIT	      9F
+SM1				  BIT	      9E
+SM2				  BIT	      9D
+SM_CHECK_DIGIT			  CODE	    0095	 106
+SM_CHECK_EQUAL			  CODE	    0065	  87
+SM_CHECK_PLUS			  CODE	    005C	  83
+SM_INVALID			  CODE	    0092	 104
+SM_STORE			  CODE	    009D	 110
+SP				  DATA	      81
+START				  CODE	    0003	  46
+STORE_DIGIT			  CODE	    0189	 218
+T0				  BIT	      B4
+T1				  BIT	      B5
+TB8				  BIT	      9B
+TCON				  DATA	      88
+TF0				  BIT	      8D
+TF1				  BIT	      8F
+TH0				  DATA	      8C
+TH1				  DATA	      8D
+TI				  BIT	      99
+TIMER0				  CODE	    000B
+TIMER1				  CODE	    001B
+TL0				  DATA	      8A
+TL1				  DATA	      8B
+TMOD				  DATA	      89
+TMP				  NUMBER    0045	  31
+TMP2				  NUMBER    0046	  32
+TMP3				  NUMBER    0047	  33
+TR0				  BIT	      8C
+TR1				  BIT	      8E
+TXD				  BIT	      B1
+VALIDATE_AND_SAVE		  CODE	    0291	 334
+VAS_DAY				  CODE	    02E5	 378
+VAS_D_CHK			  CODE	    030A	 398
+VAS_FAIL			  CODE	    033A	 427
+VAS_FAIL1			  CODE	    0298	 338
+VAS_FAIL2			  CODE	    02C4	 359
+VAS_FAIL3			  CODE	    02D3	 368
+
+ASEM-51 V1.3                                        Copyright (c) 2002 by W.W. Heinz                                         PAGE 27
+
+
+
+SYMBOL				  TYPE     VALUE	LINE
+------------------------------------------------------------
+VAS_FAIL4			  CODE	    02E2	 377
+VAS_FAIL5			  CODE	    0307	 397
+VAS_FAIL6			  CODE	    0313	 404
+VAS_FAIL7			  CODE	    033A	 426
+VAS_H1				  CODE	    02B1	 351
+VAS_H2				  CODE	    02B7	 353
+VAS_HOUR			  CODE	    029B	 339
+VAS_MINUTE			  CODE	    02C7	 360
+VAS_MONTH			  CODE	    0316	 405
+VAS_SAVE			  CODE	    0338	 424
+VAS_SECOND			  CODE	    02D6	 369
+WAIT_DHT_HIGH			  CODE	    050E	 665
+WAIT_DHT_LOW			  CODE	    0503	 656
+WDH1				  CODE	    0510	 667
+WDH_OK				  CODE	    0517	 671
+WDL1				  CODE	    0505	 658
+WDL_OK				  CODE	    050C	 662
+WR				  BIT	      B6
+WRITE_INPUTS_TO_RTC		  CODE	    033C	 431
